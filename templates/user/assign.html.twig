@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}User assign{% endblock %}
+
+{% block body %}
+    Assign user "{{ user.username }}" to agent:
+    <div></div>
+    <form action="{{ path('app_user_assign') }}" name="assign-user-form" id="assign-user-form" method="post">
+        <input type="hidden" name="userId" value="{{ user.id }}">
+        <select name="agentId" id="agentId" form="assign-user-form">
+            {% for agent in agents %}
+                <option value="{{ agent.id }}">{{ agent.username }}</option>
+            {% endfor %}
+        </select>
+       <button form="assign-user-form" type="submit">Assign User</button>
+    </form>
+    
+{% endblock %}

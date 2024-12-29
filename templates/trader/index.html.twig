@@ -1,0 +1,174 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Register Page{% endblock %}
+
+{% block body %}
+ <h1>Trader</h1>
+ <form action="{{ path('app_open_trade') }}" method="POST" id="trader-form">
+  {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_AGENT') %}
+  <label>
+   Choose User
+   <select name="from_user_id" id="from-user">
+    {% for user in users %}
+     <option value="{{ user.id }}">{{ user.username }}</option>
+    {% endfor %}
+   </select>
+  </label>
+  {% endif %}
+
+  <table id="myTable" class="display">
+   <thead>
+   <tr>
+    <th></th>
+    <th></th>
+   </tr>
+   </thead>
+   <tbody>
+    <tr>
+     <td>Name Of Asset</td>
+     <td>BTC/USD</td>
+     <input type="hidden" name="asset" value="BTC/USD">
+    </tr>
+    <tr>
+     <td>Entry Rate</td>
+     <td>bid - <span id="bid-span">0</span>, ask - <span id="ask-span">0</span></td>
+     <input type="hidden" name="bid" value="0" id="bid-input">
+     <input type="hidden" name="ask" value="0" id="ask-input">
+    </tr>
+    <tr>
+     <td>Count</td>
+     <td><input
+              form="trader-form"
+              type="number"
+              id="numberInput"
+              name="numberInput"
+              min="0.1"
+              max="100"
+              step="0.1"
+              placeholder="Enter a number"
+              required
+      ></td>
+    </tr>
+    <tr>
+     <td>Lot Size</td>
+     <td>10</td>
+     <input type="hidden" name="lotSize" value="10">
+    </tr>
+    <tr>
+     <td>Trade Size</td>
+     <td id="trade-size">0</td>
+    </tr>
+    <tr>
+     <td>Pip Value</td>
+     <td id="pip-value"></td>
+    </tr>
+    <tr>
+     <td>Used Margin</td>
+     <td id="used-margin"></td>
+    </tr>
+    <tr>
+     <td>Position</td>
+     <td>
+      <select name="position" id="position" form="trader-form">
+       <option value="buy" selected>buy</option>
+       <option value="sell">sell</option>
+      </select>
+     </td>
+    </tr>
+    <tr>
+     <td>Stop Loss</td>
+     <td><input
+              form="trader-form"
+              type="number"
+              id="stopLoss"
+              name="stopLoss"
+              step="1"
+              placeholder="Enter a number"
+              required
+      ></td>
+    </tr>
+    <tr>
+     <td>Take Profit</td>
+     <td><input
+              form="trader-form"
+              type="number"
+              id="takeProfit"
+              name="takeProfit"
+              step="1"
+              placeholder="Enter a number"
+              required
+      ></td>
+    </tr>
+   </tbody>
+  </table>
+  <button type="submit">Open Trade</button>
+  <button disabled>Close Trade</button>
+ </form>
+
+ <script>
+  const serverUrl = "wss://stream.binance.com:9443/ws/btcusdt@bookTicker";
+  const bidSpan = document.getElementById('bid-span');
+  const askSpan = document.getElementById('ask-span');
+  const bidInput = document.getElementById('bid-input');
+  const askInput = document.getElementById('ask-input');
+  const pipValue = document.getElementById('pip-value');
+  const userMargin = document.getElementById('used-margin');
+  const traderForm = document.getElementById('trader-form');
+  let lotCount = 0;
+  let bid = 0;
+  let ask = 0;
+  const socket = new WebSocket(serverUrl);
+  socket.addEventListener('open', () => {
+   console.log('WebSocket connection opened');
+  });
+  socket.addEventListener('message', (event) => {
+   bid = JSON.parse(event.data).b;
+   ask = JSON.parse(event.data).a
+   bidSpan.textContent = bid;
+   askSpan.textContent = ask;
+
+   bidInput.textContent = bid;
+   askInput.textContent = ask;
+
+   pipValue.textContent = (10 * lotCount) * 0.01 * bid; // TODO convert to euro
+   userMargin.textContent = tradeSize.textContent * 0.1 * bid;
+  });
+  socket.addEventListener('close', () => {
+   console.log('WebSocket connection closed');
+  });
+  socket.addEventListener('error', (error) => {
+   console.error('WebSocket error:', error);
+  });
+
+  const input = document.getElementById('numberInput');
+  const tradeSize = document.getElementById('trade-size');
+
+
+  input.addEventListener('input', (event) => {
+   const value = parseFloat(event.target.value);
+   const min = parseFloat(input.min);
+   const max = parseFloat(input.max);
+   tradeSize.textContent = 10 * value;
+   lotCount = value;
+   pipValue.textContent = (10 * lotCount) * 0.01 * bid;
+   userMargin.textContent = tradeSize.textContent * 0.1 * bid;
+   // Check if the value is within the allowed range
+   if (value < min || value > max) {
+    alert (`Please enter a number between ${min} and ${max}.`);
+    event.target.value = 0.1;
+   }
+  });
+
+ </script>
+ <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
+ <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+ <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
+ <script>
+  let table = new DataTable('#myTable', {
+   searching: false,
+   ordering:  false,
+   paging: false
+  });
+ </script>
+
+{% endblock %}

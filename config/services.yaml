@@ -1,0 +1,56 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones
+
+    App\Services\Strategies\Resolvers\AgentRoleStrategyResolver:
+        arguments:
+            $strategies:
+                - '@App\Services\Strategies\AdminAgentRoleStrategy'
+                - '@App\Services\Strategies\AgentRoleStrategy'
+    App\Services\Strategies\Resolvers\UserRoleStrategyResolver:
+        arguments:
+            $strategies:
+                - '@App\Services\Strategies\UserAgentRoleStrategy'
+                - '@App\Services\Strategies\UserAdminRoleStrategy'
+    App\Services\Strategies\Resolvers\TradeRoleStrategyResolver:
+        arguments:
+            $strategies:
+                - '@App\Services\Strategies\UserTradeRoleStrategy'
+                - '@App\Services\Strategies\AgentTradeRoleStrategy'
+                - '@App\Services\Strategies\AdminTradeRoleStrategy'
+    App\Services\AgentAuthorizationService:
+        arguments:
+            $security: '@App\Security\BundleSecurity'
+            $roleStrategyResolver: '@App\Services\Strategies\Resolvers\AgentRoleStrategyResolver'
+        lazy: true
+    App\Services\UserAuthorizationService:
+        arguments:
+            $security: '@App\Security\BundleSecurity'
+            $roleStrategyResolver: '@App\Services\Strategies\Resolvers\UserRoleStrategyResolver'
+        lazy: true
+    App\Services\TradeAuthorizationService:
+        arguments:
+            $security: '@App\Security\BundleSecurity'
+            $roleStrategyResolver: '@App\Services\Strategies\Resolvers\TradeRoleStrategyResolver'
+        lazy: true

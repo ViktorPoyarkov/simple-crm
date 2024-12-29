@@ -1,0 +1,45 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Agents{% endblock %}
+
+{% block body %}
+
+    <h1>Agents</h1>
+    <table id="myTable" class="display">
+        <thead>
+        <tr>
+            <th>Username</th>
+            <th>Login time</th>
+            <th>Currency</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for agent in agents %}
+            <tr>
+                <td>{{ agent.username }}</td>\
+                <td>{{ agent.loginTime ? agent.loginTime|date('Y-m-d H:i:s') : '' }}</td>
+                <td>{{ agent.roles ? agent.roles|json_encode : '' }}</td>
+                <td>
+                    <a href="{{ path('app_agent_show', {'id': agent.id}) }}">show</a>
+                    <a href="{{ path('app_agent_edit', {'id': agent.id}) }}">edit</a>
+                    <a href="{{ path('app_agent_assign_page', {'id': agent.id}) }}">assign agent</a>
+
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="8">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_agent_new') }}">Create new</a>
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
+    <script>
+        let table = new DataTable('#myTable');
+    </script>
+{% endblock %}

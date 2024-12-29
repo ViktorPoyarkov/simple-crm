@@ -1,0 +1,150 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Register Page{% endblock %}
+
+{% block body %}
+    <h1>Trader</h1>
+    <form action="{{ path('app_close_trade') }}" method="POST" id="trader-form">
+        <input type="hidden" name="trade_id" value="{{ trade.id }}">
+        <table id="myTable" class="display">
+            <thead>
+            <tr>
+                <th></th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Name Of Asset</td>
+                <td>BTC/USD</td>
+                <input type="hidden" name="asset" value="BTC/USD">
+            </tr>
+            <tr>
+                <td>Rate</td>
+                <td>bid - <span id="bid-span">0</span>, ask - <span id="ask-span">0</span></td>
+            </tr>
+            <tr>
+                <td>Entry Rate</td>
+                <td>{{ trade.getEntryRate }}</td>
+            </tr>
+            <tr>
+                <td>Count</td>
+                <td><input
+                            form="trader-form"
+                            type="number"
+                            id="numberInput"
+                            name="numberInput"
+                            min="0.1"
+                            max="100"
+                            step="0.1"
+                            placeholder="Enter a number"
+                            value="{{ trade.getLotCount() }}"
+                            disabled
+                    ></td>
+            </tr>
+            <tr>
+                <td>Lot Size</td>
+                <td>10</td>
+                <input type="hidden" name="lotSize" value="10">
+            </tr>
+            <tr>
+                <td>Trade Size</td>
+                <td id="trade-size">{{ trade.getTradeSize() }}</td>
+            </tr>
+            <tr>
+                <td>Position</td>
+                <td id="position">
+                    {{ trade.getPosition() }}
+                </td>
+            </tr>
+            <tr>
+                <td>Stop Loss</td>
+                <td><input
+                            form="trader-form"
+                            type="number"
+                            id="stopLoss"
+                            name="stopLoss"
+                            step="1"
+                            placeholder="Enter a number"
+                            value="{{ trade.getStopLoss() }}"
+                    ></td>
+            </tr>
+            <tr>
+                <td>Take Profit</td>
+                <td><input
+                            form="trader-form"
+                            type="number"
+                            id="takeProfit"
+                            name="takeProfit"
+                            step="1"
+                            placeholder="Enter a number"
+                            value="{{ trade.getTakeProfit() }}"
+                    ></td>
+            </tr>
+            </tbody>
+        </table>
+        <button disabled>Open Trade</button>
+        <button type="submit">Close Trade</button>
+    </form>
+
+    <script>
+        const serverUrl = "wss://stream.binance.com:9443/ws/btcusdt@bookTicker";
+        const bidSpan = document.getElementById('bid-span');
+        const askSpan = document.getElementById('ask-span');
+        const bidInput = document.getElementById('bid-input');
+        const askInput = document.getElementById('ask-input');
+        const traderForm = document.getElementById('trader-form');
+        const stopLossInput = document.getElementById('stopLoss');
+        const takeProfitInput = document.getElementById('takeProfit');
+        const position = document.getElementById('position');
+        let lotCount = 0;
+        let bid = 0;
+        let ask = 0;
+        let submitted = false;
+        const socket = new WebSocket(serverUrl);
+        socket.addEventListener('open', () => {
+            console.log('WebSocket connection opened');
+        });
+        socket.addEventListener('message', (event) => {
+            if (submitted) {
+                return;
+            }
+            bid = JSON.parse(event.data).b;
+            ask = JSON.parse(event.data).a
+            bidSpan.textContent = bid;
+            askSpan.textContent = ask;
+            const positionNumber = Number(position.textContent);
+            if (positionNumber) {
+                if (Number(stopLossInput.value) >= Number(bid)) {
+                    traderForm.submit();
+                    submitted = true
+                }
+                if (Number(takeProfitInput.value) <= Number(bid)) {
+                }
+            } else {
+                if (Number(stopLossInput.value) <= Number(ask)) {
+                }
+                if (Number(takeProfitInput.value) >= Number(ask)) {
+                }
+            }
+        });
+        socket.addEventListener('close', () => {
+            console.log('WebSocket connection closed');
+        });
+        socket.addEventListener('error', (error) => {
+            console.error('WebSocket error:', error);
+        });
+
+    </script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
+    <script>
+        let table = new DataTable('#myTable', {
+            searching: false,
+            ordering:  false,
+            paging: false
+        });
+    </script>
+
+{% endblock %}
