@@ -2,24 +2,26 @@
 
 namespace App\Controller;
 
-use App\Entity\Agent;
+use App\Repository\UserRepository;
 use App\Services\Interfaces\AgentService;
 use App\Services\LogService;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Entity\User;
 
 #[Route('/admin/agents')]
 final class AgentController extends AbstractEventController
 {
     private AgentService $agentService;
+    private UserRepository $userRepository;
 
-    public function __construct(AgentService $agentService, LogService $logService)
+    public function __construct(AgentService $agentService, LogService $logService, UserRepository $userRepository)
     {
         parent::__construct($logService);
         $this->agentService = $agentService;
+        $this->userRepository = $userRepository;
     }
 
     #[Route(name: 'app_agent_index', methods: ['GET'])]
@@ -71,5 +73,28 @@ final class AgentController extends AbstractEventController
         }
 
         return $this->redirect('/');
+    }
+
+    #[Route('/agent-recursive/{id}', name: 'app_agent_assign', methods: ['GET'])]
+    public function agentRecursive(int $id): Response
+    {
+        $user = $this->userRepository->find($id);
+
+        $this->printIds($user);
+
+        return new Response();
+    }
+
+    private function printIds(User $user, $first = true)
+    {
+        if(!$first) {
+            echo $user->getId() . ' -- ';
+        }
+        if (in_array('ROLE_AGENT', $user->getRoles())) {
+            foreach ($user->getUsers() as $oneUser) {
+                $this->printIds($oneUser, false);
+
+            }
+        }
     }
 }

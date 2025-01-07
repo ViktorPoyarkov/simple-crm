@@ -6,6 +6,7 @@ use App\Repository\UserRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use App\Entity\Interfaces\User as IUser;
+use Doctrine\Common\Collections\Collection;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User implements IUser
@@ -34,10 +35,27 @@ class User implements IUser
     #[ORM\Column(type: Types::DECIMAL, precision: 15, scale: 2, nullable: true)]
     private ?string $equity = null;
 
-    #[ORM\ManyToOne(targetEntity: Agent::class)]
-    #[ORM\JoinColumn(name: 'agent_id', referencedColumnName: 'id')]
 
-    private Agent|null $agent = null;
+    #[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'users')]
+    #[ORM\JoinColumn(name: 'agent_id', referencedColumnName: 'id')]
+    private ?User $agent = null;
+
+    #[ORM\OneToMany(mappedBy: 'agent', targetEntity: self::class)]
+    private Collection $users;
+
+    #[ORM\Column(type: Types::JSON)]
+    private array $roles = [];
+
+    public function getRoles(): array
+    {
+        return $this->roles;
+    }
+
+    public function getUsers(): Collection
+    {
+        return $this->users;
+    }
+
 
     public function getId(): ?int
     {
@@ -78,11 +96,6 @@ class User implements IUser
         $this->login_time = $login_time;
 
         return $this;
-    }
-
-    public function getRoles(): array
-    {
-        return ['ROLE_USER'];
     }
 
     public function eraseCredentials(): void
@@ -130,7 +143,7 @@ class User implements IUser
         return $this;
     }
 
-    public function getAgent(): ?Agent
+    public function getAgent(): ?User
     {
         return $this->agent;
     }
