@@ -35,6 +35,9 @@ class User implements IUser
     #[ORM\Column(type: Types::DECIMAL, precision: 15, scale: 2, nullable: true)]
     private ?string $equity = null;
 
+    #[ORM\Column(type: Types::DECIMAL, precision: 15, scale: 2, nullable: true)]
+    private ?string $cash_balance = null;
+
 
     #[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'users')]
     #[ORM\JoinColumn(name: 'agent_id', referencedColumnName: 'id')]
@@ -139,6 +142,18 @@ class User implements IUser
     public function setEquity(?string $equity): static
     {
         $this->equity = $equity;
+
+        return $this;
+    }
+
+    public function getCashBalance(): ?string
+    {
+        return $this->cash_balance;
+    }
+
+    public function setCashBalance(?string $cash_balance): static
+    {
+        $this->cash_balance = $cash_balance;
 
         return $this;
     }
