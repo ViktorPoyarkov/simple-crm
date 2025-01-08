@@ -38,4 +38,34 @@ class TradeRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function updateOpenPnl(float $ask): void
+    {
+        $this->createQueryBuilder('t')
+            ->update('t')
+            ->join('t.user', 'u')
+            ->join('u.currency', 'c')
+            ->set('t.pnl',
+                "CASE 
+                WHEN t.position = 1 THEN 
+                    (($ask - t.entry_rate) * (t.trade_size * t.lot_count * 0.01 * c.rate_to_usd) * 100)
+                WHEN t.position = 0 THEN 
+                    ((t.entry_rate - $ask) * (t.trade_size * t.lot_count * 0.01 * c.rate_to_usd) * 100)
+            END"
+            )
+            ->where('t.status = :status')
+            ->setParameter('status', 1);
+    }
+
+    public function updateUsedMargin(float $bid): void
+    {
+        $this->createQueryBuilder('t')
+            ->update('t')
+            ->join('t.user', 'u')
+            ->join('u.currency', 'c')
+            ->set('t.used_margin', 't.trade_size * 0.1 * c.rate_to_usd * :bidPrice')
+            ->where('t.status = :status')
+            ->setParameter('bidPrice', $bid)
+            ->setParameter('status', 1);
+    }
 }

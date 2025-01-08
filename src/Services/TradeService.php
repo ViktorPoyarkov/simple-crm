@@ -7,6 +7,7 @@ use App\Entity\Interfaces\Agent;
 use App\Repository\TradeRepository;
 use App\Services\Interfaces\TradeAuthorizationServiceInterface;
 use App\Services\Interfaces\TradeService as ITradeService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\InputBag;
 
 class TradeService implements ITradeService
@@ -14,15 +15,18 @@ class TradeService implements ITradeService
     protected TradeRepository $tradeRepository;
     protected TradeAuthorizationServiceInterface $tradeAuthorizationService;
     protected HandleTradeService $handleTradeService;
+    private EntityManagerInterface $entityManager;
     public function __construct(
         TradeRepository $tradeRepository,
         TradeAuthorizationServiceInterface $tradeAuthorizationService,
-        HandleTradeService $handleTradeService
+        HandleTradeService $handleTradeService,
+        EntityManagerInterface $entityManager
     )
     {
         $this->tradeRepository = $tradeRepository;
         $this->tradeAuthorizationService = $tradeAuthorizationService;
         $this->handleTradeService = $handleTradeService;
+        $this->entityManager = $entityManager;
     }
 
     public function getTrade(int $id): Trade
@@ -78,4 +82,18 @@ class TradeService implements ITradeService
         $this->handleTradeService->closeTrade($id);
     }
 
+    public function updateOpenPnl(float $ask)
+    {
+        $this->tradeRepository->updateOpenPnl($ask);
+    }
+
+    public function updateUsedMargin(float $bid): void
+    {
+        $this->tradeRepository->updateUsedMargin($bid);
+    }
+
+    public function stopOut(): void
+    {
+        $this->entityManager->getConnection()->executeStatement('CALL StopOutProcess()');
+    }
 }
