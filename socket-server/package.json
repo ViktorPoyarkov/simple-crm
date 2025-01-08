@@ -1,0 +1,14 @@
+{
+  "name": "socket-server",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "ws": "^8.13.0",
+    "axios": "^1.5.0"
+  },
+  "author": "Viktor Poyarkov",
+  "license": "MIT"
+}

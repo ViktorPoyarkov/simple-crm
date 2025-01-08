@@ -59,7 +59,7 @@ class TraderController extends AbstractController
         ]);
     }
 
-    #[Route('/trader/update-rate', name: 'app_update_trade', methods: ['POST'])]
+    #[Route('/trader/update-rate', name: 'app_update_rate', methods: ['POST'])]
     public function updateRate(Request $request, TradeService $tradeService): Response
     {
         $bid = $request->request->get('bid');
